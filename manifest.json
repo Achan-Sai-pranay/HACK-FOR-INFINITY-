@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Neuro Reader",
+  "description": "A neuroinclusive reading assistant for ADHD and dyslexia.",
+  "version": "1.0",
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icons/icon.png"
+  },
+
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles/reader.css"]
+    }
+  ]
+}
