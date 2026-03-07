@@ -59,14 +59,10 @@ function findMainContent() {
       if (el && el.innerText && el.innerText.trim().length > 200) return el;
     } catch(e) {}
   }
-  // Fallback: largest text container
   let best = null, bestLen = 0;
   document.querySelectorAll("div, section, main").forEach(el => {
     const len = el.innerText ? el.innerText.trim().length : 0;
-    if (len > bestLen && el.offsetParent !== null) {
-      bestLen = len;
-      best = el;
-    }
+    if (len > bestLen && el.offsetParent !== null) { bestLen = len; best = el; }
   });
   return best;
 }
@@ -75,85 +71,83 @@ function applyFocusMode() {
   const mainContent = findMainContent();
   if (!mainContent) return;
 
-  // Hide clutter that doesn't contain the main content
-  document.querySelectorAll(CLUTTER_SELECTORS).forEach(el => {
-    if (!el.contains(mainContent) && !mainContent.contains(el)) {
-      el.dataset.focusHidden = "1";
-      el.style.setProperty("display", "none", "important");
-    }
-  });
-
-  // Hide siblings up the tree that aren't ancestors/descendants of main content
-  let current = mainContent;
-  while (current && current !== document.body) {
-    const parent = current.parentElement;
-    if (parent) {
-      [...parent.children].forEach(child => {
-        if (child !== current && !child.contains(mainContent) && !child.dataset.focusHidden) {
-          child.dataset.focusHidden = "1";
-          child.style.setProperty("display", "none", "important");
-        }
-      });
-    }
-    current = parent;
-  }
-
-  // Build reader overlay
-  const reader = document.createElement("div");
-  reader.id = "neuro-focus-reader";
-
+  // ── Extract clean text+headings only (no tables, infoboxes, nav) ──
   const clone = mainContent.cloneNode(true);
 
-  // Strip inline ads from cloned content
-  CLUTTER_SELECTORS.split(",").forEach(sel => {
-    try { clone.querySelectorAll(sel.trim()).forEach(el => el.remove()); } catch(e) {}
+  // Remove noise inside clone
+  const noiseSelectors = [
+    "table", "figure", "aside", "nav", ".infobox", ".navbox",
+    ".reflist", ".references", ".toc", "#toc",
+    "[class*='sidebar']", "[class*='ad']", "[class*='banner']",
+    "[class*='share']", "[class*='social']", "[class*='related']",
+    "[class*='footer']", "[class*='cookie']", "[class*='popup']",
+    "script", "style", "iframe", "ins", "noscript",
+    ".mw-editsection",  // Wikipedia edit links
+    ".thumb",           // Wikipedia image thumbs (optional, remove if you want images)
+    ".hatnote",
+  ];
+  noiseSelectors.forEach(sel => {
+    try { clone.querySelectorAll(sel).forEach(el => el.remove()); } catch(e) {}
   });
 
-  // Clean up clashing inline styles in clone
+  // Strip ALL inline styles from every element in clone
   clone.querySelectorAll("*").forEach(el => {
-    ["background","background-color","background-image","color","position","z-index","float","width","max-width","margin","padding"].forEach(prop => {
-      el.style.removeProperty(prop);
-    });
+    el.removeAttribute("style");
+    el.removeAttribute("class"); // nuke classes so site CSS can't bleed in
+    el.removeAttribute("id");
   });
 
-  reader.appendChild(clone);
+  // ── Build the full-screen reader shell ──
+  const reader = document.createElement("div");
+  reader.id = "neuro-focus-reader";
+  // Inline critical styles directly on the element so nothing overrides
+  reader.setAttribute("style", [
+    "all: initial",                 // RESET everything
+    "display: block",
+    "position: fixed",
+    "inset: 0",
+    "width: 100vw",
+    "height: 100vh",
+    "z-index: 2147483647",
+    "background: #111111",
+    "overflow-y: auto",
+    "box-sizing: border-box",
+    "font-family: Georgia, serif",
+    "color: #dedad5",
+  ].join(" !important; ") + " !important;");
+
+  // Inner column wrapper
+  const column = document.createElement("div");
+  column.setAttribute("style", [
+    "display: block",
+    "max-width: 720px",
+    "margin: 64px auto 120px auto",
+    "padding: 0 32px",
+    "box-sizing: border-box",
+  ].join(" !important; ") + " !important;");
+
+  column.appendChild(clone);
+  reader.appendChild(column);
   document.body.appendChild(reader);
 
-  // Inject styles
+  // ── Scoped styles for content INSIDE the reader only ──
   const style = document.createElement("style");
   style.id = "neuro-focus-styles";
   style.textContent = `
-    html, body { overflow: hidden !important; }
+    body.neuro-focus-active { overflow: hidden !important; }
 
-    #neuro-focus-reader {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      z-index: 2147483647 !important;
-      background: #111 !important;
-      overflow-y: auto !important;
-      box-sizing: border-box !important;
-    }
-    #neuro-focus-reader > * {
-      max-width: 740px !important;
-      margin: 64px auto 120px auto !important;
-      padding: 0 36px !important;
-      box-sizing: border-box !important;
-      float: none !important;
-      width: auto !important;
-    }
-    #neuro-focus-reader,
     #neuro-focus-reader * {
+      all: revert;
+      font-family: Georgia, Cambria, 'Times New Roman', serif !important;
       color: #dedad5 !important;
       background: transparent !important;
-      font-family: Georgia, Cambria, 'Times New Roman', serif !important;
       line-height: 1.9 !important;
-      letter-spacing: 0.01em !important;
-      max-width: 100% !important;
+      letter-spacing: 0.012em !important;
+      border-color: #2e2e2e !important;
       float: none !important;
       box-shadow: none !important;
       text-shadow: none !important;
+      max-width: 100% !important;
     }
     #neuro-focus-reader h1,
     #neuro-focus-reader h2,
@@ -163,55 +157,44 @@ function applyFocusMode() {
     #neuro-focus-reader h6 {
       color: #ffffff !important;
       line-height: 1.35 !important;
-      margin-top: 1.8em !important;
-      margin-bottom: 0.5em !important;
+      margin: 1.6em 0 0.4em !important;
     }
     #neuro-focus-reader h1 { font-size: 2rem !important; }
-    #neuro-focus-reader h2 { font-size: 1.5rem !important; }
+    #neuro-focus-reader h2 { font-size: 1.55rem !important; border-bottom: 1px solid #2a2a2a !important; padding-bottom: 6px !important; }
     #neuro-focus-reader h3 { font-size: 1.2rem !important; }
-    #neuro-focus-reader p  { font-size: 1.1rem !important; margin-bottom: 1.4em !important; }
+    #neuro-focus-reader p  { font-size: 1.1rem !important; margin: 0 0 1.3em !important; }
     #neuro-focus-reader a  { color: #7eb8f7 !important; text-decoration: underline !important; }
-    #neuro-focus-reader img {
-      max-width: 100% !important;
-      height: auto !important;
-      border-radius: 6px !important;
-      margin: 1.5em auto !important;
-      display: block !important;
-      opacity: 0.88 !important;
-    }
-    #neuro-focus-reader table { border-collapse: collapse !important; width: 100% !important; margin: 1.5em 0 !important; }
-    #neuro-focus-reader td, #neuro-focus-reader th { border: 1px solid #2e2e2e !important; padding: 8px 12px !important; }
-    #neuro-focus-reader th { color: #fff !important; background: #1e1e1e !important; }
-    #neuro-focus-reader blockquote {
-      border-left: 3px solid #7eb8f7 !important;
-      padding-left: 1.2em !important;
-      margin-left: 0 !important;
-      color: #9c9890 !important;
-      font-style: italic !important;
-    }
-    #neuro-focus-reader li { margin-bottom: 0.5em !important; }
-    #neuro-focus-reader ul, #neuro-focus-reader ol { padding-left: 1.5em !important; }
+    #neuro-focus-reader img { max-width: 100% !important; height: auto !important; border-radius: 6px !important; display: block !important; margin: 1.2em auto !important; opacity: 0.88 !important; }
+    #neuro-focus-reader ul,
+    #neuro-focus-reader ol { padding-left: 1.6em !important; margin-bottom: 1.2em !important; }
+    #neuro-focus-reader li { margin-bottom: 0.45em !important; }
+    #neuro-focus-reader blockquote { border-left: 3px solid #7eb8f7 !important; padding-left: 1.1em !important; margin-left: 0 !important; color: #9c9890 !important; font-style: italic !important; }
+    #neuro-focus-reader sup { font-size: 0.65em !important; color: #666 !important; }
 
     /* Exit button */
     #neuro-focus-close {
+      all: initial !important;
+      display: block !important;
       position: fixed !important;
       top: 14px !important;
       right: 18px !important;
       z-index: 2147483648 !important;
-      background: #1c1c1c !important;
+      background: #1e1e1e !important;
       color: #dedad5 !important;
       border: 1px solid #3a3a3a !important;
       border-radius: 8px !important;
-      padding: 7px 15px !important;
+      padding: 7px 14px !important;
       font-size: 13px !important;
       font-family: sans-serif !important;
       cursor: pointer !important;
-      letter-spacing: 0.06em !important;
+      letter-spacing: 0.05em !important;
     }
     #neuro-focus-close:hover { background: #2a2a2a !important; }
 
-    /* Reading progress bar */
+    /* Progress bar */
     #neuro-focus-progress {
+      all: initial !important;
+      display: block !important;
       position: fixed !important;
       top: 0 !important; left: 0 !important;
       height: 3px !important;
@@ -222,6 +205,7 @@ function applyFocusMode() {
     }
   `;
   document.head.appendChild(style);
+  document.body.classList.add("neuro-focus-active");
 
   // Exit button
   const closeBtn = document.createElement("button");
@@ -236,8 +220,7 @@ function applyFocusMode() {
   document.body.appendChild(bar);
   reader.addEventListener("scroll", () => {
     const pct = reader.scrollHeight - reader.clientHeight > 0
-      ? (reader.scrollTop / (reader.scrollHeight - reader.clientHeight)) * 100
-      : 0;
+      ? (reader.scrollTop / (reader.scrollHeight - reader.clientHeight)) * 100 : 0;
     bar.style.width = pct + "%";
   });
 
@@ -247,19 +230,9 @@ function applyFocusMode() {
 function removeFocusMode() {
   ["neuro-focus-reader","neuro-focus-styles","neuro-focus-close","neuro-focus-progress"]
     .forEach(id => document.getElementById(id)?.remove());
-
-  document.querySelectorAll("[data-focus-hidden]").forEach(el => {
-    el.style.removeProperty("display");
-    delete el.dataset.focusHidden;
-  });
-
-  document.documentElement.style.removeProperty("overflow");
-  document.body.style.removeProperty("overflow");
-
+  document.body.classList.remove("neuro-focus-active");
   focusEnabled = false;
 }
-
-
 // ─────────────────────────────────────────────
 // MESSAGE LISTENER
 // ─────────────────────────────────────────────
