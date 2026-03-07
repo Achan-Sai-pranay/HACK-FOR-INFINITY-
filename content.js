@@ -133,7 +133,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       "div[class*='modal'], div[class*='popup'], div[class*='message'], " +
       "span[class*='text'], span[class*='label'], span[class*='content']";
 
-    const applyBionic = (el) => {
+    function applyBionic(el) {
       if (el.dataset.bionicDone) return;
 
       // Skip elements that are purely structural (no direct text)
@@ -189,7 +189,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       el.dataset.bionicDone = "1";
     };
 
-    const revertBionic = () => {
+    function revertBionic() {
       document.querySelectorAll("[data-bionic-done]").forEach(el => {
         if (el.dataset.originalHtml !== undefined) {
           el.innerHTML = el.dataset.originalHtml;
