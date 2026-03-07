@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Neuro Reader",
-  "description": "A neuroinclusive reading assistant for ADHD and dyslexia.",
+  "name": "EasyAble Read",
+  "description": "A EasyAble Read assistant for ADHD and dyslexia.",
   "version": "1.0",
 
   "action": {
