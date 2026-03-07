@@ -1,34 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <title>Neuro Reader</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 
 <body>
 
-  <img src="icons/logo.jpeg" width="80">
-  
-<h2>Neuro Reader</h2>
+<div class="header">
+  <img src="icons/logo.jpeg" alt="EasyAble Logo">
+  <h2>Neuro Reader</h2>
+</div>
 
-<label>
-  <input type="checkbox" id="focusMode">
-  Focus Mode
-</label>
+<div class="card">
 
-<label>
-  <input type="checkbox" id="dyslexiaFont">
-  Dyslexia Friendly Font
-</label>
+  <div class="option">
+    <span>Focus Mode</span>
+    <label class="switch">
+      <input type="checkbox" id="focusMode">
+      <span class="slider"></span>
+    </label>
+  </div>
 
-<label>
-  <input type="checkbox" id="highlightLines">
-  Highlight Lines
-</label>
+  <div class="option">
+    <span>Dyslexia Friendly Font</span>
+    <label class="switch">
+      <input type="checkbox" id="dyslexiaFont">
+      <span class="slider"></span>
+    </label>
+  </div>
 
-<label>
-  <input type="checkbox" id="bionicReading">
-  Bionic Reading
-</label>
+  <div class="option">
+    <span>Highlight Lines</span>
+    <label class="switch">
+      <input type="checkbox" id="highlightLines">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="option">
+    <span>Bionic Reading</span>
+    <label class="switch">
+      <input type="checkbox" id="bionicReading">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="divider"></div>
+
+  <input 
+    type="password" 
+    id="apiKey" 
+    placeholder="Enter OpenAI API Key"
+    class="api-input"
+  >
+
+  <button id="summarizeBtn">
+    Summarize Page
+  </button>
+
+  <div id="summaryBox"></div>
+
+</div>
 
 <script src="popup.js"></script>
 

@@ -376,4 +376,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
   }
 
+  // ─────────────────────────────────────────────
+// TEXT EXTRACTION FOR AI
+// ─────────────────────────────────────────────
+
+  if (request.action === "extractText") {
+
+    let mainText = document.body.innerText;
+
+    if (mainText.length > 20000) {
+      mainText = mainText.slice(0, 20000);
+    }
+
+    sendResponse({ text: mainText });
+
+  }
+
 });
+
