@@ -37,3 +37,10 @@
 .neuro-dyslexia-font *{
   font-family: 'OpenDyslexic', Arial, sans-serif !important;
 }
+
+.neuro-dyslexia-font *{
+  font-family: "OpenDyslexic", Arial, sans-serif !important;
+  line-height: 1.6 !important;
+  letter-spacing: 0.05em !important;
+  
+}

@@ -68,8 +68,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if(request.action === "highlight"){
 
   const elements = document.querySelectorAll(
-    "article p, main p, section p, div p, li, span"
-  );
+"article p, main p, section p, div p, li"  );
 
   if(!highlightEnabled){
 
@@ -93,32 +92,52 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 }
 
 
- if(request.action === "bionic"){
+ if (request.action === "bionic") {
 
   const elements = document.querySelectorAll(
-    "article p, main p, section p, div p, li"
+    "p, li, span, a, h1, h2, h3, h4, h5, h6"
   );
 
   elements.forEach(el => {
 
-    if(!el.dataset.originalHtml){
+    if (!el.dataset.originalHtml) {
 
       el.dataset.originalHtml = el.innerHTML;
 
-      const text = el.innerText;
+      const walker = document.createTreeWalker(
+        el,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+      );
 
-      const modified = text.replace(/\b(\w{2,})(\w*)\b/g, (match, first, rest) => {
+      let node;
 
-        const half = Math.ceil(first.length / 2);
+      while (node = walker.nextNode()) {
 
-        return "<b>" + first.slice(0, half) + "</b>" + first.slice(half) + rest;
+        const words = node.nodeValue.split(/(\s+)/);
 
-      });
+        const newHTML = words.map(word => {
 
-      el.innerHTML = modified;
+          if (word.trim().length < 4) return word;
 
-    }
-    else{
+          const half = Math.ceil(word.length / 2);
+
+          return "<strong style='color:inherit'>" +
+                 word.slice(0, half) +
+                 "</strong>" +
+                 word.slice(half);
+
+        }).join("");
+
+        const span = document.createElement("span");
+        span.innerHTML = newHTML;
+
+        node.replaceWith(span);
+
+      }
+
+    } else {
 
       el.innerHTML = el.dataset.originalHtml;
       delete el.dataset.originalHtml;
