@@ -1,5 +1,6 @@
 let focusEnabled = false;
 let overlay = null;
+let highlightEnabled = false;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
@@ -36,49 +37,53 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   }
 
+
   if(request.action === "font"){
 
-  const fontId = "dyslexic-font";
+  const className = "neuro-dyslexia-font";
 
-  if(!document.getElementById(fontId)){
+  if(!document.body.classList.contains(className)){
 
-    const link = document.createElement("link");
-    link.id = fontId;
-    link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=OpenDyslexic&display=swap";
+    const linkId = "dyslexic-font";
 
-    document.head.appendChild(link);
+    if(!document.getElementById(linkId)){
+      const link = document.createElement("link");
+      link.id = linkId;
+      link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=OpenDyslexic&display=swap";
+      document.head.appendChild(link);
+    }
 
-    document.body.style.fontFamily = "'OpenDyslexic', Arial";
+    document.body.classList.add(className);
 
-  } else {
+  }
+  else{
 
-    document.body.style.fontFamily = "";
-
-    document.getElementById(fontId).remove();
+    document.body.classList.remove(className);
 
   }
 
 }
 
-  let highlightEnabled = false;
+  if(request.action === "highlight"){
 
-if(request.action === "highlight"){
-
-  const paragraphs = document.querySelectorAll("p");
+  const elements = document.querySelectorAll(
+    "article p, main p, section p, div p, li, span"
+  );
 
   if(!highlightEnabled){
 
-    paragraphs.forEach(p => {
-      p.style.background = "rgba(255,255,0,0.2)";
+    elements.forEach(el => {
+      el.style.backgroundColor = "rgba(255,255,0,0.25)";
     });
 
     highlightEnabled = true;
 
-  } else {
+  } 
+  else{
 
-    paragraphs.forEach(p => {
-      p.style.background = "";
+    elements.forEach(el => {
+      el.style.backgroundColor = "";
     });
 
     highlightEnabled = false;
@@ -87,33 +92,38 @@ if(request.action === "highlight"){
 
 }
 
+
  if(request.action === "bionic"){
 
-  const elements = document.querySelectorAll("article p, main p, p");
+  const elements = document.querySelectorAll(
+    "article p, main p, section p, div p, li"
+  );
 
   elements.forEach(el => {
 
-    // skip if already processed
-    if(el.dataset.bionicApplied) return;
+    if(!el.dataset.originalHtml){
 
-    let text = el.innerText;
+      el.dataset.originalHtml = el.innerHTML;
 
-    let words = text.split(" ");
+      const text = el.innerText;
 
-    let modified = words.map(word => {
+      const modified = text.replace(/\b(\w{2,})(\w*)\b/g, (match, first, rest) => {
 
-      if(word.length < 4) return word;
+        const half = Math.ceil(first.length / 2);
 
-      let half = Math.ceil(word.length / 2);
+        return "<b>" + first.slice(0, half) + "</b>" + first.slice(half) + rest;
 
-      return "<b>" + word.slice(0, half) + "</b>" + word.slice(half);
+      });
 
-    });
+      el.innerHTML = modified;
 
-    el.innerHTML = modified.join(" ");
+    }
+    else{
 
-    // mark paragraph as processed
-    el.dataset.bionicApplied = true;
+      el.innerHTML = el.dataset.originalHtml;
+      delete el.dataset.originalHtml;
+
+    }
 
   });
 

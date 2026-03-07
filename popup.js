@@ -1,27 +1,27 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
 
-  document.getElementById("focusMode").addEventListener("click", () => {
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      chrome.tabs.sendMessage(tabs[0].id, {action: "focus"});
-    });
-  });
+  function send(action) {
 
-  document.getElementById("dyslexiaFont").addEventListener("click", () => {
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      chrome.tabs.sendMessage(tabs[0].id, {action: "font"});
-    });
-  });
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
 
-  document.getElementById("highlightLines").addEventListener("click", () => {
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      chrome.tabs.sendMessage(tabs[0].id, {action: "highlight"});
-    });
-  });
+      chrome.tabs.sendMessage(tabs[0].id, {
+        action: action
+      });
 
-  document.getElementById("bionicReading").addEventListener("click", () => {
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      chrome.tabs.sendMessage(tabs[0].id, {action: "bionic"});
     });
-  });
+
+  }
+
+  document.getElementById("focusMode")
+    .addEventListener("change", () => send("focus"));
+
+  document.getElementById("dyslexiaFont")
+    .addEventListener("change", () => send("font"));
+
+  document.getElementById("highlightLines")
+    .addEventListener("change", () => send("highlight"));
+
+  document.getElementById("bionicReading")
+    .addEventListener("change", () => send("bionic"));
 
 });

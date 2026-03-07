@@ -1,25 +1,33 @@
 body{
   font-family: Arial, sans-serif;
-  width: 200px;
-  padding: 10px;
+  width: 230px;
+  padding: 12px;
+  background: #f8f9fc;
 }
 
 h2{
   font-size: 16px;
+  text-align: center;
   margin-bottom: 10px;
+  color: #333;
 }
 
-button{
-  width: 100%;
-  margin: 5px 0;
-  padding: 8px;
-  border: none;
-  background: #4a6cf7;
-  color: white;
-  border-radius: 6px;
+label{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  font-size: 13px;
   cursor: pointer;
 }
 
-button:hover{
-  background: #3451c6;
+input[type="checkbox"]{
+  accent-color: #4a6cf7;
+  transform: scale(1.1);
+}
+
+label:hover{
+  background: rgba(74,108,247,0.08);
+  border-radius: 6px;
+  padding: 4px;
 }
