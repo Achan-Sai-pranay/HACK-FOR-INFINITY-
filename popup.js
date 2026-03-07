@@ -34,6 +34,46 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("bionicReading")
     .addEventListener("change", () => send("bionic"));
 
+    // ─────────────────────────────────────────────
+// TEXT TO SPEECH
+// ─────────────────────────────────────────────
+document.getElementById("ttsBtn").addEventListener("click", () => {
+
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+
+    chrome.tabs.sendMessage(
+      tabs[0].id,
+      { action: "extractText" },
+      function (response) {
+
+        if (!response || !response.text) return;
+
+        // Stop if already speaking
+        if (speechSynthesis.speaking) {
+          speechSynthesis.cancel();
+          document.getElementById("ttsBtn").textContent = "🔊 Read Page Aloud";
+          return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(response.text.slice(0, 5000));
+        utterance.rate = 0.95;
+        utterance.pitch = 1;
+        utterance.lang = "en-US";
+
+        utterance.onend = () => {
+          document.getElementById("ttsBtn").textContent = "🔊 Read Page Aloud";
+        };
+
+        speechSynthesis.speak(utterance);
+        document.getElementById("ttsBtn").textContent = "⏹ Stop Reading";
+
+      }
+    );
+
+  });
+
+});
+
   // ─────────────────────────────────────────────
   // AI SUMMARIZER
   // ─────────────────────────────────────────────
